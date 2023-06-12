@@ -10,6 +10,8 @@ Build-Depends: debhelper-compat (= 13),
  python3-opentelemetry-test-utils,
  python3-pytest,
  python3-wrapt,
+ pybuild-plugin-pyproject,
+ python3-hatchling,
 Standards-Version: 4.5.1
 Homepage: https://github.com/open-telemetry/opentelemetry-python/
 Rules-Requires-Root: no
