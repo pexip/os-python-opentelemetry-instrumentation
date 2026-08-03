@@ -1,16 +1,5 @@
 # Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# SPDX-License-Identifier: Apache-2.0
 # type: ignore
 
 from logging import WARNING
@@ -54,11 +43,12 @@ class TestInstrumentor(TestCase):
     def test_singleton(self):
         self.assertIs(self.Instrumentor(), self.Instrumentor())
 
+    @patch("opentelemetry.instrumentation.instrumentor._LOG")
     @patch(
         "opentelemetry.instrumentation.instrumentor.BaseInstrumentor._check_dependency_conflicts"
     )
     def test_instrument_missing_dependency_raise(
-        self, mock__check_dependency_conflicts
+        self, mock__check_dependency_conflicts, mock_logger
     ):
         instrumentor = self.Instrumentor()
 
@@ -71,3 +61,19 @@ class TestInstrumentor(TestCase):
             instrumentor.instrument,
             raise_exception_on_conflict=True,
         )
+        mock_logger.error.assert_not_called()
+
+    @patch("opentelemetry.instrumentation.instrumentor._LOG")
+    @patch(
+        "opentelemetry.instrumentation.instrumentor.BaseInstrumentor._check_dependency_conflicts"
+    )
+    def test_instrument_missing_dependency_log_error(
+        self, mock__check_dependency_conflicts, mock_logger
+    ):
+        instrumentor = self.Instrumentor()
+        conflict = DependencyConflict("missing", "missing")
+        mock__check_dependency_conflicts.return_value = conflict
+        self.assertIsNone(
+            instrumentor.instrument(raise_exception_on_conflict=False)
+        )
+        mock_logger.error.assert_any_call(conflict)
